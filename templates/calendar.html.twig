@@ -1,0 +1,114 @@
+<div class="container">
+    <div class="row justify-content-center"><h1>Запиши час (за зъболекар)</h1></div>
+    <table class="table table-bordered bg-light">
+        <tr>
+            <td colspan="7" align="center">
+                <!--Показваме линковете/текста за предишен/текущ/бъдещ месеци-->
+                {% if (month['previous']['number'] >= month['current']['month'] and month['previous']['year'] == month['current']['fYear']) or month['previous']['year'] > month['current']['fYear'] %}
+                <a href="?year={{ month['previous']['year'] }}&amp;month={{ month['previous']['number'] }}">{{ month['previous']['name']~' '~month['previous']['year'] }}</a>
+                {% else %}
+                {{ month['previous']['name']~' '~month['previous']['year'] }}
+                    
+                {% endif %}
+                &nbsp;|&nbsp;
+                {{ month['current']['name']~' '~month['current']['year'] }}
+                &nbsp;|&nbsp;
+                {% if month['next']['year'] > month['max']['year'] or (month['next']['year'] == month['max']['year'] and month['next']['number'] > month['max']['number']) %}
+                    {{ month['next']['name']~' '~month['next']['year'] }}
+                {% else %}
+                    <a href="?year={{ month['next']['year'] }}&amp;month={{ month['next']['number'] }}">{{ month['next']['name']~' '~month['next']['year'] }}</a>
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <!--Изписваме дните от седмицата, като почивните дни са отбелязани в червено(събота и неделя)-->
+            {% for dayN, day in monthHeader %}
+                <td width="14%"><div class="row justify-content-center{% if (dayN+1) not in workingDays %} text-danger{% endif %}">{{ day }}</div></td>
+            {% endfor %}
+        </tr>
+        {% for week in calendar %}
+        <tr>
+            {% for day in week %}
+            <!--За всеки ден от семицата показваме номер на ден от месеца, всички часове, ако е работен и е ден на текущия месец, като почивните дни са с тъмен фон(събота и неделя)-->
+            <td class="{% if month['current']['today'] == day['date'] %} alert-warning{% endif %}{% if day['dayOfWeek'] not in workingDays %} alert-dark{% endif %}"">
+                <div class="container">
+                    <div class="row justify-content-center">{{ day['dayNumber'] }}</div>
+                    <div>
+                    {% if day['month'] == month['current']['number'] and day['dayOfWeek'] in workingDays %}
+                        {% for baseHour in baseHours %}
+                            <!--Проверяваме дали имаме записан час за текущ ден/час и инициализираме временна променлива, с цел по-кратък запис на условията по-надолу-->
+                            {% if day['hours'][baseHour]['patient_info'] is defined %}
+                                {% set patient_info = day['hours'][baseHour]['patient_info'] %}
+                            {% else %}
+                                {% set patient_info = null %}
+                            {% endif %}
+                            <div class="row justify-content-left">
+                                <!--Ако деня е работен и часа е резервиран показваме червен блок, в противен случай блока е зелен и е налице бутон за отваряне на формата за запазване на час-->
+                                <a style="font-size: 11px;" data-toggle="tooltip" data-placement="left" class="btn btn-sm light {% if patient_info is empty %} btn-success" title="Свободен час" data-content="Свободен час" {% else %} btn-danger" title="Резервиран час" data-content="Резервиран час" {% endif %}>{{ baseHour }}</a>
+                                {% if patient_info is empty %}
+                                <a class="btn btn-primary btn-sm" title="Запиши час" data-toggle="tooltip" data-placement="right" onclick="$('#date').val('{{ day['date'] }}');$('#hour').val('{{ baseHour }}');$('#dateDisplay').html('{{ day['dateShow'] }}');$('#hourDisplay').html('{{ baseHour }}');$('#patient_form').modal();"><i class="fas fa-plus"></i></a>
+                                {% endif %}
+                            </div>
+                            
+                            
+                        {% endfor %}
+                    {% endif %}
+                    </div>
+                </div>
+            </td>
+        {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+    <div id="patient_form" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+
+            <!--Модална форма (bootstrap) за запазване на час-->
+            <div class="modal-content">
+              <div class="modal-header">
+                <!--При наличие на масива $error, т.е. имаме попълнена грешна форма, то попълваме <span> елементите преди автоматичното показване на формата-->
+                <h4 class="modal-title">Запиши се за <span id="dateDisplay" class="font-weight-bold bg-light">{{ error['date'] }}</span><span class="font-weight-bold bg-light">&nbsp;</span><span id="hourDisplay" class="font-weight-bold bg-light">{{ error['hour'] }}</span></h4><button type="button" class="close" data-dismiss="modal">&times;</button>
+              </div>
+              <div class="modal-body">
+                {{ form_start(form) }}
+                    <!--Скрити полета за дата/час, които са извън полетата от клас Patient, те се попълват с при избиране на час за заявка автоматично-->
+                    <input type="hidden" id="date" name="date" />
+                    <input type="hidden" id="hour" name="hour" />
+                    <div class="row">
+                        <div class="col">{{ form_errors(form) }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            {{ form_row(form.name, { 'label': 'Name' }) }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            {{ form_row(form.email, { 'label': 'Email' }) }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            {{ form_row(form.phone, { 'label': 'Phone' }) }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            {{ form_row(form.save, { 'label': 'Save' }) }}
+                        </div>
+                    </div>
+                {{ form_end(form) }}
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-info" data-dismiss="modal">Затвори</button>
+              </div>
+            </div>
+        
+          </div>
+        
+        </div>
+        <!--При наличие на масива $error то показваме формата 'насилствено', защото съдържа невалидни данни и потребителя има възможност да ги коригира и изпрати отново-->
+        {% if error['date'] != null and error['hour'] != null %}
+        <script>$('#patient_form').modal();</script>
+        {% endif %}
+</div>

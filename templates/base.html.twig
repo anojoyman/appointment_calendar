@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>{% block title %}Appointment Calendar{% endblock %}</title>
+        {% block stylesheets %}
+        {# 'app' must match the first argument to addEntry() in webpack.config.js #}
+        {{ encore_entry_link_tags('app') }}
+        {% endblock %}
+        {% block javascripts %}
+        {{ encore_entry_script_tags('app') }}
+        
+            <!-- Renders app.js & a webpack runtime.js file
+                <script src="/build/runtime.js"></script>
+                <script src="/build/app.js"></script> -->
+        {% endblock %}
+    </head>
+    <body>
+        {% block body %}
+        
+        <main class="py-4">
+            {% include "calendar.html.twig" %}
+            {% endblock %}
+        </main>
+        
+    </body>
+</html>
