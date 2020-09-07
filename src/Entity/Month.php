@@ -2,10 +2,7 @@
 
 namespace App\Entity;
 
-use App\Entity\Day;
 use DateTime;
-use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Component\Validator\Mapping\ClassMetadata;
 
 class Month
 {
